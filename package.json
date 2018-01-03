@@ -1,0 +1,28 @@
+{
+  "name": "cdh-links-d3",
+  "author": "Tahir H. Butt",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "./node_modules/.bin/webpack-dev-server --hot --inline --progress",
+    "build": "webpack -p --config webpack.config.js --hide-modules"
+  },
+  "dependencies": {
+    "d3": "^4.12.2",
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "@types/d3": "^4.12.0",
+    "@types/d3-force": "^1.1.0",
+    "@types/d3-scale": "^1.0.11",
+    "@types/lodash": "^4.14.91",
+    "css-loader": "^0.28.7",
+    "csv-loader": "^2.1.1",
+    "extract-text-webpack-plugin": "^3.0.2",
+    "node-sass": "^4.7.2",
+    "sass-loader": "^6.0.6",
+    "style-loader": "^0.19.1",
+    "ts-loader": "^3.2.0",
+    "typescript": "^2.6.2",
+    "webpack": "^3.10.0"
+  }
+}
