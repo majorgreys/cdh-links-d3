@@ -18,7 +18,7 @@ interface Node {
     group: string;
 }
 
-csv('/data/booktags.csv', (e, d) => {
+csv('/booktags.csv', (e, d) => {
 
     console.log
     
