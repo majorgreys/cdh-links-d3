@@ -18,10 +18,10 @@ interface Node {
     group: string;
 }
 
-csv('/booktags.csv', (e, d) => {
+console.log('Hello');
 
-    console.log
-    
+csv('/data/booktags.csv', (e, d) => {
+
     const nodes: Node[] = union(
         map(d, r => {
             return {
