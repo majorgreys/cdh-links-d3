@@ -18,23 +18,15 @@ interface Node {
     group: string;
 }
 
-console.log('Hello');
+csv('data/booktags.csv', (e, d) => {
 
-csv('/data/booktags.csv', (e, d) => {
-
+    // Build list of nodes with `book_title` and `subject` columns
     const nodes: Node[] = union(
-        map(d, r => {
-            return {
-                id: r.book_title,
-                group: "Book"
-            }}),
-        map(d, r => {
-            return {
-                id: r.subject,
-                group: "Subject"
-            }})
+        map(d, r => { return { id: r.book_title, group: "Book" }}),
+        map(d, r => { return { id: r.subject, group: "Subject" }})
     );
     
+    // Build list links by replacing subject and book by their index number
     const links: Link[] = map(d, r => {
         return {
             source: findIndex(nodes, n => n.id == r.book_title),
