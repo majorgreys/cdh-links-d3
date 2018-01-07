@@ -1,22 +1,27 @@
-import { forceSimulation, forceLink, forceManyBody, forceCenter } from 'd3-force';
+import { forceSimulation, forceLink, forceManyBody, forceCenter, Simulation, SimulationNodeDatum, SimulationLinkDatum } from 'd3-force';
 import { scaleOrdinal, schemeCategory20 } from 'd3-scale';
 import { select } from 'd3-selection';
 import { csv, event, drag } from 'd3';
-import { map, union, findIndex } from 'lodash';
+import { map, union, findIndex, find } from 'lodash';
 
 const width = 960;
 const height = 480;
 
-interface Link {
-    source: number;
-    target: number;
-    value: number;
-}
-
-interface Node {
+interface Node extends SimulationNodeDatum {
     id: string;
     group: string;
 }
+
+interface Link extends SimulationLinkDatum<Node> {
+    source: Node;
+    target: Node;
+    value: number;
+}
+
+const simulation = forceSimulation()
+    .force("link", forceLink().id((d:Node) => {return d.id;}))
+    .force("charge", forceManyBody().strength(-120))
+    .force("center", forceCenter(width / 2, height / 2));
 
 csv('data/booktags.csv', (e, d) => {
 
@@ -29,20 +34,11 @@ csv('data/booktags.csv', (e, d) => {
     // Build list links by replacing subject and book by their index number
     const links: Link[] = map(d, r => {
         return {
-            source: findIndex(nodes, n => n.id == r.book_title),
-            target: findIndex(nodes, n => n.id == r.subject),
+            source: find(nodes, n => n.id == r.book_title),
+            target: find(nodes, n => n.id == r.subject),
             value: Number(r.n)
         }
     });
-
-    console.log(links);
-    console.log(nodes);
-
-    const force = forceSimulation()
-        .nodes(nodes)
-        .force("link", forceLink(links).distance(50))
-        .force("charge", forceManyBody().strength(-120))
-        .force("center", forceCenter(width / 2, height / 2));
 
     const svg = select('#root')
         .append('svg')
@@ -51,17 +47,54 @@ csv('data/booktags.csv', (e, d) => {
 
     const color = scaleOrdinal(schemeCategory20);
 
-    const node = svg
-        .selectAll('circle')
-        .data(nodes)
-        .enter()
-        .append<SVGCircleElement>('circle')
-        .attr('r', 5)
-        .style('stroke', '#FFFFFF')
-        .style('stroke-width', 1.5)
-        .style('fill', (d: any) => color(d.group));
+    var link = svg.append("g")
+        .attr("class", "links")
+        .selectAll("line")
+        .data(links)
+        .enter().append("line")
+        .attr("stroke-width", function (d) { return Math.sqrt(d.value); });
 
-    force.on("tick", ()=>{return this.ticked()});
+    var node = svg.selectAll("circle").data(nodes)
+        .enter().append("circle")
+        .attr("r", 5)
+        .attr("fill", function(d) { return color(d.group); })
+        .call(drag<SVGCircleElement, Node>()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
 
-    node.attr('cx', (d: any) => d.x).attr('cy', (d: any) => d.y);
+    function dragstarted(this: SVGCircleElement, d: Node) {
+        simulation.restart();
+        simulation.alpha(1.0);
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function dragged(this: SVGCircleElement, d: Node) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+
+    function dragended(this: SVGCircleElement, d: Node) {
+        d.fx = null;
+        d.fy = null;
+        simulation.alphaTarget(0.1);
+    }
+
+    simulation.force("links", forceLink(links));
+
+    function ticked() {
+        const that: Simulation<Node, Link> = this;
+        link
+            .attr("x1", function (d:Link) { return d.source.x; })
+            .attr("y1", function (d:Link) { return d.source.y; })
+            .attr("x2", function (d:Link) { return d.target.x; })
+            .attr("y2", function (d:Link) { return d.target.y; });
+
+        node
+            .attr("cx", function (d:Node) { return d.x; })
+            .attr("cy", function (d:Node) { return d.y; });
+    }
+
+    simulation.nodes(nodes).on("tick", ticked);
 });

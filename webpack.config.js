@@ -11,6 +11,9 @@ const extractSass = new ExtractTextPlugin({
 module.exports = {
   entry: [ './src/app.ts' ],
   devtool: 'inline-source-map',
+  devServer: {
+    hot: true
+  },
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist')
@@ -44,4 +47,9 @@ module.exports = {
         }
       }]
   },
+  plugins: [
+    new webpack.LoaderOptionsPlugin({ debug: true }),
+    new webpack.NamedModulesPlugin(), 
+    new webpack.HotModuleReplacementPlugin()
+  ]
 };
